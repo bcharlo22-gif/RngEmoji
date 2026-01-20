@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Emoji Gacha RNG - Login Seguro</title>
+<style>
+    body {
+        font-family: monospace;
+        background-color: #121212;
+        color: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 30px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        margin-top: 10px;
+        cursor: pointer;
+        border-radius: 10px;
+        border: none;
+        background-color: #ff9800;
+        color: white;
+        transition: transform 0.2s;
+    }
+    button:hover {
+        transform: scale(1.1);
+    }
+    input {
+        padding: 5px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+    #resultado {
+        font-size: 60px;
+        margin-top: 20px;
+    }
+    #rareza {
+        font-size: 25px;
+        margin-top: 10px;
+    }
+    #historial {
+        margin-top: 20px;
+        width: 300px;
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: #222;
+        padding: 10px;
+        border-radius: 10px;
+    }
+    #historial ul {
+        padding-left: 20px;
+    }
+    #probabilidades {
+        margin-top: 20px;
+        background-color: #222;
+        padding: 10px;
+        border-radius: 10px;
+    }
+</style>
+</head>
+<body>
+<h1>🎲 Emoji Gacha RNG 🎲</h1>
+
+<div id="login">
+    <input type="text" id="usuarioInput" placeholder="Usuario">
+    <input type="password" id="passwordInput" placeholder="Contraseña">
+    <button onclick="iniciarSesion()">Iniciar Sesión</button>
+</div>
+
+<div id="juego" style="display:none;">
+    <h2>👤 Usuario: <span id="nombreUsuario"></span></h2>
+    <h3>Personaje: <span id="personaje"></span></h3>
+    <button onclick="girar()">GIRAR</button>
+    <div id="resultado">❓</div>
+    <div id="rareza"></div>
+
+    <div id="probabilidades">
+        <h3>🎲 Probabilidades:</h3>
+        <ul>
+            <li>Común (62%): 🤑😎😃</li>
+            <li>Épico (30%): 🌚🗿⛏</li>
+            <li>Legendario (10%): 🗣🔥🚬</li>
+            <li>Mítico (1%): 🙉🎩🍷</li>
+        </ul>
+    </div>
+
+    <div id="historial">
+        <h3>📜 Historial de Giros:</h3>
+        <ul id="listaHistorial"></ul>
+    </div>
+</div>
+
+<script>
+// --------------------------------------------------
+// Sistema de sesión con usuario + contraseña
+// --------------------------------------------------
+let usuario = "";
+let historial = [];
+let personaje = "😎";
+
+function iniciarSesion() {
+    usuario = document.getElementById("usuarioInput").value.trim();
+    const password = document.getElementById("passwordInput").value;
+
+    if (usuario === "" || password === "") {
+        alert("Rellená usuario y contraseña bro!");
+        return;
+    }
+
+    // Revisar si ya existe usuario en localStorage
+    const data = JSON.parse(localStorage.getItem("gacha_" + usuario));
+
+    if (data) {
+        if (data.password !== password) {
+            alert("Contraseña incorrecta, bro 😵‍💫");
+            return;
+        }
+        historial = data.historial || [];
+        personaje = data.personaje || "😎";
+    } else {
+        // Nuevo usuario
+        historial = [];
+        personaje = prompt("Elegí tu personaje emoji:", "😎") || "😎";
+        guardarUsuario(password);
+    }
+
+    // Mostrar juego
+    document.getElementById("login").style.display = "none";
+    document.getElementById("juego").style.display = "block";
+    document.getElementById("nombreUsuario").innerText = usuario;
+    document.getElementById("personaje").innerText = personaje;
+    actualizarHistorial();
+}
+
+function guardarUsuario(password) {
+    localStorage.setItem("gacha_" + usuario, JSON.stringify({
+        password: password,
+        historial: historial,
+        personaje: personaje
+    }));
+}
+
+// --------------------------------------------------
+// Función del Gacha RNG
+// --------------------------------------------------
+function girar() {
+    let random = Math.random() * 100;
+    let emoji = "";
+    let rareza = "";
+
+    if (random <= 1) { // 1% Mítico
+        const mitico = ["🙉","🎩","🍷"];
+        emoji = mitico[Math.floor(Math.random() * mitico.length)];
+        rareza = "MÍTICO 🏆";
+    } else if (random <= 11) { // 10% Legendario
+        const legendario = ["🗣","🔥","🚬"];
+        emoji = legendario[Math.floor(Math.random() * legendario.length)];
+        rareza = "LEGENDARIO ✨";
+    } else if (random <= 41) { // 30% Épico
+        const epico = ["🌚","🗿","⛏"];
+        emoji = epico[Math.floor(Math.random() * epico.length)];
+        rareza = "ÉPICO 💎";
+    } else { // 62% Común
+        const comun = ["🤑","😎","😃"];
+        emoji = comun[Math.floor(Math.random() * comun.length)];
+        rareza = "COMÚN 😁";
+    }
+
+    document.getElementById("resultado").innerText = emoji;
+    document.getElementById("rareza").innerText = rareza;
+
+    historial.push(`${emoji} - ${rareza}`);
+    actualizarHistorial();
+    guardarUsuario(document.getElementById("passwordInput").value);
+}
+
+// --------------------------------------------------
+// Función para actualizar historial en pantalla
+// --------------------------------------------------
+function actualizarHistorial() {
+    const lista = document.getElementById("listaHistorial");
+    lista.innerHTML = "";
+    historial.slice().reverse().forEach(item => {
+        const li = document.createElement("li");
+        li.innerText = item;
+        lista.appendChild(li);
+    });
+}
+</script>
+</body>
+</html>
